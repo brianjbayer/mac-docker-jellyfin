@@ -1,0 +1,16 @@
+# docker-compose file for jellyfin server using bridge networking
+
+version: "3.7"
+services:
+  jellyfinserver:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    user: ${JELLYFIN_UID}:${JELLYFIN_GID}
+    ports:
+      - 8096:8096
+    volumes:
+      - ${JELLYFIN_CONFIG_JSON}:/jellyfin/jellyfin-web/config.json
+      - ${JELLYFIN_CONFIG}:/config
+      - ${JELLYFIN_CACHE}:/cache
+      - ${JELLYFIN_MEDIA}:/media
+    restart: unless-stopped

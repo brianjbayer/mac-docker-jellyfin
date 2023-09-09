@@ -1,0 +1,77 @@
+#!/bin/bash
+# ---------------------------------------------------
+# This idempotent script runs the previously created
+# Jellyfin Media Server based out of this directory
+# using docker-compose and the confguration
+# in the created .env file
+#
+# ASSUMES macOS specifically when getting the
+# local host IP and opening the browser
+# ---------------------------------------------------
+
+# Exit script on any errors
+set -e
+
+# -- Functions --
+count_down() {
+  printf "."
+  sleep 1
+  COUNTER=$((COUNTER - 1))
+  if [[ ${COUNTER} -eq 0 ]] ; then
+    echo "✘"
+    >&2 echo "ERROR: Timed out waiting !!!"
+    exit 2
+  fi
+}
+
+# -- MAIN --
+echo "Running the Jellyfin Media Server:"
+
+# Docker must be already running
+docker stats --no-stream &>/dev/null ||
+  (>&2 echo "Docker must be running" ; exit 1)
+
+# Local Host Jellyfin Server address
+# macOS https://apple.stackexchange.com/questions/20547/how-do-i-find-my-ip-address-from-the-command-line
+host_ip=$(ipconfig getifaddr en0)
+jellyfin_server_url="http://${host_ip}:8096"
+
+# Docker compose
+docker_compose_cmd="docker compose"
+
+# Output Jellyfin Server docker compose config
+echo "The Jellyfin Media Server Config..."
+${docker_compose_cmd} config
+
+# Start the Jellyfin Server if not running
+echo "Bringing up Jellyfin Media Server..."
+$docker_compose_cmd ps jellyfin | grep jellyfin || \
+  ${docker_compose_cmd} up -d
+
+# Wait for jellyfin container to be up and healthy
+COUNTER=100
+echo "Waiting for Jellyfin Media Server container to be up..."
+until docker ps --filter "health=healthy" | grep jellyfin &>/dev/null ; do
+  count_down
+done
+echo "✔"
+
+# Wait for Jellyfin Web Server to be up and healthy
+COUNTER=100
+echo "Waiting for Jellyfin Web Server [${jellyfin_server_url}] to be up..."
+until curl "${jellyfin_server_url}/health"  &>/dev/null ; do
+  count_down
+done
+echo "✔"
+
+
+# Open web browser to Jellyfin Web Server
+echo "Opening Jellyfin Web Server [${jellyfin_server_url}] in browser..."
+open "${jellyfin_server_url}"
+
+echo ""
+echo "--------------------------------------------------------"
+echo "To STOP the Jellyfin Media Server, enter this command..."
+echo "${docker_compose_cmd} down"
+echo "--------------------------------------------------------"
+echo ""

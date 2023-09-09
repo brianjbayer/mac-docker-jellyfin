@@ -1,0 +1,45 @@
+#!/bin/bash
+# -----------------------------------------------------------------------
+# This script PERMANENTLY DESTROYS the Jellyfin Media Server based out of
+# this directory
+# -----------------------------------------------------------------------
+
+# Exit script on any errors
+set -e
+
+while getopts 'm:fh' opt; do
+  case "$opt" in
+
+    f)
+      force_destroy="true"
+      ;;
+
+    ?|h)
+    cat << EOF
+Usage: $(basename $0) [-fh]
+  -f    force delete without prompt
+  -h    display help
+EOF
+    exit
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+# -- MAIN --
+echo "Destroying Jellyfin Media Server (configuration only):"
+[[ -z "${force_destroy}" ]] && \
+  (read -p "Press any key to EXIT or enter 'DESTROY' to permanently destroy)? " response ; \
+    [[ "${response}" == 'DESTROY' ]] || \
+    exit
+  )
+
+jellyfin_server_file_dirs=(
+  .env
+  .jellyfin-server
+)
+
+for file_dir in ${jellyfin_server_file_dirs[@]}; do
+  [[ -e "${file_dir}" ]] && \
+    (echo "Removing '${file_dir}'" ; rm -rf "${file_dir}")
+done

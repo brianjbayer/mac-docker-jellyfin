@@ -1,0 +1,16 @@
+#!/bin/bash
+# ------------------------------------------------------------
+# This stops the running Jellyfin Media Server based out of
+#  this directory
+# ------------------------------------------------------------
+
+# Exit script on any errors
+set -e
+
+# -- MAIN --
+echo "Stopping the Jellyfin Media Server:"
+
+docker compose exec jellyfinserver sh -c 'echo " ...Jellyfin Media Server running"' || \
+  exit
+
+docker compose down

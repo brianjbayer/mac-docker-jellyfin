@@ -1,0 +1,92 @@
+#!/bin/bash
+# -----------------------------------------------------------------------
+# This script makes a Docker-based Jellyfin Media Server based out of
+# this directory by creating the .env file containing the server's
+# configuration
+# -----------------------------------------------------------------------
+
+# Exit script on any errors
+set -e
+
+while getopts 'm:fh' opt; do
+  case "$opt" in
+
+    f)
+      force_overwrite="true"
+      ;;
+
+    m)
+      jellyfin_server_media="$OPTARG"
+      ;;
+
+    ?|h)
+    cat << EOF
+Usage: $(basename $0) [-fh] [-m media-directory]
+  -f                    force overwrite of existing files
+  -h                    display help
+  -m media-directory    path to the media (videos, music) to be served
+                        by the Jellyfin Media Server
+EOF
+    exit
+      ;;
+  esac
+done
+shift "$(($OPTIND -1))"
+
+# -- MAIN --
+echo "Configuring Jellyfin Media Server:"
+[[ -z ${force_overwrite} ]] || echo "FORCING overwrite !"
+
+# -- UserID/GroupID for File Permissions--
+current_user=$(whoami)
+current_uid=$(id -u $current_user)
+current_gid=$(id -g $current_user)
+
+# -- Persistent Server Directories --
+jellyfin_server_dir="${PWD}/.jellyfin-server"
+
+jellyfin_server_data_dir="${jellyfin_server_dir}/data"
+jellyfin_config_dir="${jellyfin_server_data_dir}/config"
+jellyfin_cache_dir="${jellyfin_server_data_dir}/cache"
+
+# Create the directories
+jellyfin_directories=(
+  "${jellyfin_server_dir}"
+  "${jellyfin_server_data_dir}"
+  "${jellyfin_config_dir}"
+  "${jellyfin_cache_dir}"
+)
+
+for dir in ${jellyfin_directories[@]}; do
+  # mkdir -p is non-destructive
+  mkdir -p "${dir}"
+done
+
+# Set the persistent server media directory
+[[ -z "${jellyfin_server_media}" ]] && \
+  read -p "Please ENTER the full path with NO ending /: " jellyfin_server_media
+
+[[ ! -d "${jellyfin_server_media}" ]] && \
+  echo "!!! FYI, currently there is no directory at [${jellyfin_server_media}] !!!"
+
+# Set the persistent Jellyfin server json.config file
+jellyfin_config_json_file="${jellyfin_server_dir}/config.json"
+
+# -- Write .env File --
+[[ -z ${force_overwrite} && -f ".env" ]] || \
+  cat << EOF >> .env
+JELLYFIN_UID=${current_uid}
+JELLYFIN_GID=${current_gid}
+JELLYFIN_CONFIG=${jellyfin_config_dir}
+JELLYFIN_CACHE=${jellyfin_cache_dir}
+JELLYFIN_MEDIA=${jellyfin_server_media}
+JELLYFIN_CONFIG_JSON=${jellyfin_config_json_file}
+EOF
+
+cat ".env"
+
+# -- Copy Jellyfin config.json File --
+[[ -z ${force_overwrite} && -f "${jellyfin_config_json_file}" ]] || \
+  cp jellyfin.config.json "${jellyfin_config_json_file}"
+
+cat "${jellyfin_config_json_file}"
