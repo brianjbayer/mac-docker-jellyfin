@@ -64,7 +64,7 @@ done
 
 # Set the persistent server media directory
 [[ -z "${jellyfin_server_media}" ]] && \
-  read -p "Please ENTER the full path with NO ending /: " jellyfin_server_media
+  read -p "Please ENTER the full path to your Media with NO ending /: " jellyfin_server_media
 
 [[ ! -d "${jellyfin_server_media}" ]] && \
   echo "!!! FYI, currently there is no directory at [${jellyfin_server_media}] !!!"

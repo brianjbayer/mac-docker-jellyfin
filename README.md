@@ -12,9 +12,12 @@ image and Docker Compose.
 Just `git clone` and run the scripts.
 
 It has three idempotent and non-destructive scripts:
-  1. Run `make-jellyfin` **once** to create your Jellyfin Media Server
-  2. Run `run-jellyfin` to run your Jellyfin Media Server
-  3. Run `stop-jellyfin` to stop your running Jellyfin Media Server
+
+  1. Run `./make-jellyfin` **once** to create your Jellyfin Media Server
+
+  2. Run `./run-jellyfin` to run your Jellyfin Media Server
+
+  3. Run `./stop-jellyfin` to stop your running Jellyfin Media Server
 
 > This setup is for access for the **internal network only!**
 
@@ -26,14 +29,14 @@ You should only need to create your Jellyfin Media Server once.
      able to provide the directory path to your media that
      you want to serve
 
-To use this...
+To create your Jellyfin Media Server...
   1. Open a terminal window
-  2. Git Clone this project in desired location
+  2. `git clone` this project in desired location
   3. Change directory to the project
      ```bash
      cd mac-docker-jellyfin
      ```
-  4. Run the `./make-jellyfin` script and follow the prompts
+  4. Run the `make-jellyfin` script and follow the prompts
      to create the Jellyfin Media Server Data Directories
      and `.env` file for the Docker Compose orchestration
      ```
@@ -54,8 +57,8 @@ it as many times as you want.
 To Run your Jellyfin Media Server...
   1. Start Docker and wait until it is fully up and running
   2. You will need a browser to manage your Jellyfin Media Server
-  3. Run the `./run-jellyfin` script to run the Jellyfin Media Server
-     using your `.env` file
+  3. Run the `run-jellyfin` script to run the Jellyfin Media Server
+     using your created `.env` file
      ```
      ./run-jellyfin
      ```
@@ -68,8 +71,7 @@ To Run your Jellyfin Media Server...
 
 #### Stop
 To stop your Jellyfin Media Server...
-  1. Run the `./stop-jellyfin` script to stop your
-     Jellyfin Media Server
+  1. Run the `stop-jellyfin` script to stop your Jellyfin Media Server
      ```
      ./stop-jellyfin
      ```
