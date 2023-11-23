@@ -61,7 +61,7 @@ To create your Jellyfin Media Server...
      ./make-jellyfin
      ```
 
-### To Run the Jellyfin Media Server...
+### To Run Your Jellyfin Media Server...
 Once you have created a Jellyfin Media Server, you can run and stop
 it as many times as you want.
 
@@ -94,15 +94,17 @@ To stop your Jellyfin Media Server...
      ./stop-jellyfin
      ```
 
-### To PERMANENTLY DESTROY the Jellyfin Media Server...
+### To PERMANENTLY DESTROY Your Jellyfin Media Server...
 
 > :warning: **WARNING:** This action can not be undone!
 
-To permanently destroy a created Jellyfin Media Server but keep these
-project files, use the `.destroy-jellyfin` script.
+To permanently destroy your Jellyfin Media Server but keep
+the scripts, use the `.destroy-jellyfin` script.
 
   1. Run the `./destroy-jellyfin` script and follow the prompts
      to destroy your Jellyfin Media Server
      ```
      ./.destroy-jellyfin
      ```
+
+> :infinity: And you can always recreate it again with `./make-jellyfin`
