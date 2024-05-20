@@ -1,16 +1,43 @@
 #!/bin/bash
-# ------------------------------------------------------------
-# This stops the running Jellyfin Media Server based out of
-#  this directory
-# ------------------------------------------------------------
 
 # Exit script on any errors
 set -e
 
+usage() {
+  cat << USAGE
+Usage: $(basename $0) [-h]
+This stops the running Jellyfin Media Server based out of this directory.
+
+Options:
+  -h: display usage information
+USAGE
+}
+
+
 # -- MAIN --
-echo "Stopping the Jellyfin Media Server:"
 
-docker compose exec jellyfinserver sh -c 'echo " ...Jellyfin Media Server running"' || \
-  exit
+# Handle options
+while getopts ":h" options; do
+  case "${options}" in
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      usage
+      err_exit 1 "Invalid Option: '-$OPTARG'"
+      ;;
+  esac
+done
+shift $((OPTIND-1))
 
-docker compose down
+echo "Stopping the Jellyfin Media Server"
+
+# Docker compose
+readonly DOCKER_COMPOSE_CMD='docker compose'
+
+check_jellyfin_media_server_running() {
+  $DOCKER_COMPOSE_CMD exec jellyfinserver sh -c 'echo " ...Jellyfin Media Server running"'
+}
+
+check_jellyfin_media_server_running && docker compose down

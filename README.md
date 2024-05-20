@@ -26,6 +26,8 @@ It has three idempotent and non-destructive scripts:
 
   3. Run `./stop-jellyfin` to stop your running Jellyfin Media Server
 
+ :bulb: All scripts support the `-h` option to display help information
+
 > This setup is for access for the **internal network only!**
 
 ### To Create Your Jellyfin Media Server...
@@ -39,7 +41,6 @@ You should only need to create your Jellyfin Media Server once.
      For example if your media is on an external drive
      called `MySSD` with a directory called `Music`, the directory
      path would be `/Volumes/MySSD/Music`
-     (with no ending slash `/`)
 
      > :no_entry_sign: Although you will not need your media
      > (directory) when you create your Jellyfin Media Server,
