@@ -1,35 +1,89 @@
 #!/bin/bash
-# ---------------------------------------------------
-# This idempotent script runs the previously created
-# Jellyfin Media Server based out of this directory
-# using docker-compose and the confguration
-# in the created .env file
-#
-# ASSUMES macOS specifically when getting the
-# local host IP and opening the browser
-# ---------------------------------------------------
 
 # Exit script on any errors
 set -e
 
+usage() {
+  cat << USAGE
+Usage: $(basename $0) [-h]
+This script is specifically for macOS.
+
+This idempotent script runs the previously created Jellyfin Media Server
+based out of this directory
+
+It uses the docker-compose file and the configuration in the created .env file
+and launches the Jellyfin Media Server in your default browser.
+
+If this is the first time running the Jellyfin Media Server, you will need to
+configure it following the JellyFin instructions.  Your media files will be
+located under /media.
+
+Options:
+  -h: display usage information
+USAGE
+}
+
+readonly MACOS_OPEN='open'
+
+
 # -- Functions --
+
+err_exit() {
+  err_code=$1
+  err_msg="$2"
+  echo "ERROR: ${err_msg}[${err_code}]" 1>&2
+  exit $err_code
+}
+
 count_down() {
   printf "."
   sleep 1
-  COUNTER=$((COUNTER - 1))
-  if [[ ${COUNTER} -eq 0 ]] ; then
+  GLOBAL_COUNTER=$((GLOBAL_COUNTER - 1))
+  if [[ ${GLOBAL_COUNTER} -eq 0 ]] ; then
     echo "✘"
-    >&2 echo "ERROR: Timed out waiting !!!"
-    exit 2
+    err_exit 124 "Timed out waiting"
   fi
 }
 
-# -- MAIN --
-echo "Running the Jellyfin Media Server:"
+check_docker_running() {
+  docker stats --no-stream &>/dev/null
+}
 
-# Docker must be already running
-docker stats --no-stream &>/dev/null ||
-  (>&2 echo "Docker must be running" ; exit 1)
+macos_open_docker() {
+  # This is idempotent if Docker is already running
+  echo "MacOS detected attempting to start Docker..."
+  $MACOS_OPEN /Applications/Docker.app
+
+  echo "Waiting for Docker to be up..."
+  GLOBAL_COUNTER=50
+  until check_docker_running ; do
+    count_down
+  done
+  echo "✔"
+}
+
+# -- MAIN --
+
+# Handle options
+while getopts ":h" options; do
+  case "${options}" in
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      usage
+      err_exit 1 "Invalid Option: '-$OPTARG'"
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+echo "Running the Jellyfin Media Server"
+
+# Docker must be running
+macos_open_docker
+check_docker_running || err_exit 3 "Docker must be running"
 
 # Local Host Jellyfin Server address
 # macOS https://apple.stackexchange.com/questions/20547/how-do-i-find-my-ip-address-from-the-command-line
@@ -37,19 +91,19 @@ host_ip=$(ipconfig getifaddr en0)
 jellyfin_server_url="http://${host_ip}:8096"
 
 # Docker compose
-docker_compose_cmd="docker compose"
+readonly DOCKER_COMPOSE_CMD='docker compose'
 
 # Output Jellyfin Server docker compose config
 echo "The Jellyfin Media Server Config..."
-${docker_compose_cmd} config
+$DOCKER_COMPOSE_CMD config
 
 # Start the Jellyfin Server if not running
 echo "Bringing up Jellyfin Media Server..."
-$docker_compose_cmd ps jellyfin | grep jellyfin || \
-  ${docker_compose_cmd} up -d
+$DOCKER_COMPOSE_CMD ps jellyfin | grep jellyfin || \
+  $DOCKER_COMPOSE_CMD up -d
 
 # Wait for jellyfin container to be up and healthy
-COUNTER=100
+GLOBAL_COUNTER=100
 echo "Waiting for Jellyfin Media Server container to be up..."
 until docker ps --filter "health=healthy" | grep jellyfin &>/dev/null ; do
   count_down
@@ -57,24 +111,26 @@ done
 echo "✔"
 
 # Wait for Jellyfin Web Server to be up and healthy
-COUNTER=100
+GLOBAL_COUNTER=100
 echo "Waiting for Jellyfin Web Server [${jellyfin_server_url}] to be up..."
-until curl "${jellyfin_server_url}/health"  &>/dev/null ; do
+until curl --fail "${jellyfin_server_url}/health"  &>/dev/null ; do
   count_down
 done
 echo "✔"
 
-
 # Open web browser to Jellyfin Web Server
 echo "Opening Jellyfin Web Server [${jellyfin_server_url}] in browser..."
-open "${jellyfin_server_url}"
+$MACOS_OPEN "${jellyfin_server_url}"
 
-echo ""
-echo "------------------------------------------------------------------"
-echo "To STOP the Jellyfin Media Server, run the stop-jellyfin script..."
-echo "./stop-jellyfin"
-echo ""
-echo "or you can run..."
-echo "${docker_compose_cmd} down"
-echo "------------------------------------------------------------------"
-echo ""
+# Output outro message on stopping the Jellyfin Media Server
+cat << OUTRO
+
+------------------------------------------------------------------
+To STOP the Jellyfin Media Server, run the stop-jellyfin script...
+./stop-jellyfin
+
+or you can run...
+$DOCKER_COMPOSE_CMD down
+------------------------------------------------------------------
+
+OUTRO
