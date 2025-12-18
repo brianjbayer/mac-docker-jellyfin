@@ -25,7 +25,6 @@ USAGE
 
 readonly MACOS_OPEN='open'
 
-
 # -- Functions --
 
 err_exit() {
