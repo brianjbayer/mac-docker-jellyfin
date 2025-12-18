@@ -73,7 +73,6 @@ while [[ "$jellyfin_server_media" != "${jellyfin_server_media%/}" ]]; do
   jellyfin_server_media="${jellyfin_server_media%/}"
 done
 
-
 if [[ ! -d "${jellyfin_server_media}" ]] ; then
   echo "!!! FYI, currently there is no directory at [${jellyfin_server_media}] !!!"
 fi
